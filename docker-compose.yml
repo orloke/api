@@ -1,0 +1,16 @@
+version: "3"
+
+services:
+
+  db:
+    image: mysql:8.0
+    restart: always
+    container_name: db-devbook
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./sql/sql.sql:/docker-entrypoint-initdb.d/sql.sql
