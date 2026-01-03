@@ -1,0 +1,25 @@
+# Binários
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.out
+main
+app
+
+# Cache Go
+/bin/
+/pkg/
+
+# Env
+.env
+.env.*
+
+# Logs
+*.log
+
+# OS / Editor
+.DS_Store
+.vscode/
+.idea/
