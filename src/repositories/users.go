@@ -67,3 +67,24 @@ func (u Users) Search(nameOrNick string) ([]models.UserResponse, error) {
 
 	return users, nil
 }
+
+func (u Users) FindByID(ID uint64) (models.UserResponse, error) {
+	row := u.db.QueryRow(
+		"select id, name, nick, email, created_at, updated_at from users where id = ?",
+		ID,
+	)
+
+	var user models.UserResponse
+	if err := row.Scan(
+		&user.ID,
+		&user.Name,
+		&user.Nick,
+		&user.Email,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+	); err != nil {
+		return models.UserResponse{}, err
+	}
+
+	return user, nil
+}
