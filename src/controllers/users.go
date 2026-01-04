@@ -32,7 +32,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = user.Prepare("registration"); err != nil {
+	if err = user.Prepare(); err != nil {
 		responses.Error(w, http.StatusBadRequest, err)
 		return
 	}
@@ -67,9 +67,15 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	response := struct {
 		Message string `json:"message"`
 		ID      int    `json:"id"`
+		Name    string `json:"name"`
+		Nick    string `json:"nick"`
+		Email   string `json:"email"`
 	}{
 		Message: "User inserted",
 		ID:      user.ID,
+		Name:    user.Name,
+		Nick:    user.Nick,
+		Email:   user.Email,
 	}
 
 	responses.JSON(w, http.StatusCreated, response)

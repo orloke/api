@@ -18,8 +18,8 @@ type User struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-func (user *User) Prepare(step string) error {
-	if err := user.validate(step); err != nil {
+func (user *User) Prepare() error {
+	if err := user.validate(); err != nil {
 		return err
 	}
 
@@ -27,7 +27,7 @@ func (user *User) Prepare(step string) error {
 	return nil
 }
 
-func (user *User) validate(step string) error {
+func (user *User) validate() error {
 	if user.Name == "" {
 		return errors.New("name is required and cannot be empty")
 	}
@@ -40,7 +40,7 @@ func (user *User) validate(step string) error {
 		return errors.New("the email entered is invalid")
 	}
 
-	if step == "registration" && user.Password == "" {
+	if user.Password == "" {
 		return errors.New("password is required and cannot be empty")
 	}
 
