@@ -64,18 +64,14 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 	user.ID = int(insertedID)
 
-	response := struct {
-		Message string `json:"message"`
-		ID      int    `json:"id"`
-		Name    string `json:"name"`
-		Nick    string `json:"nick"`
-		Email   string `json:"email"`
-	}{
+	response := models.CreateUserResponse{
 		Message: "User inserted",
-		ID:      user.ID,
-		Name:    user.Name,
-		Nick:    user.Nick,
-		Email:   user.Email,
+		User: models.UserResponse{
+			ID:    user.ID,
+			Name:  user.Name,
+			Nick:  user.Nick,
+			Email: user.Email,
+		},
 	}
 
 	responses.JSON(w, http.StatusCreated, response)

@@ -18,6 +18,18 @@ type User struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+type UserResponse struct {
+	ID    int    `json:"id"`
+	Name  string `json:"name"`
+	Nick  string `json:"nick"`
+	Email string `json:"email"`
+}
+
+type CreateUserResponse struct {
+	Message string       `json:"message"`
+	User    UserResponse `json:"user"`
+}
+
 func (user *User) Prepare() error {
 	if err := user.validate(); err != nil {
 		return err
