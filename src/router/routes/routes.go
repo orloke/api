@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"api/src/controllers"
+	"database/sql"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -13,8 +15,10 @@ type Route struct {
 	Auth   bool
 }
 
-func ConfigureRoutes(router *mux.Router) *mux.Router {
-	for _, route := range UsersRoutes {
+func ConfigureRoutes(router *mux.Router, db *sql.DB) *mux.Router {
+	usersController := controllers.NewUsersController(db)
+
+	for _, route := range GetUsersRoutes(usersController) {
 		router.HandleFunc(route.Uri, route.Func).Methods(route.Method)
 	}
 

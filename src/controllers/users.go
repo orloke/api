@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"api/src/database"
 	"api/src/models"
 	"api/src/repositories"
 	"api/src/responses"
@@ -17,7 +16,14 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func CreateUser(w http.ResponseWriter, r *http.Request) {
+type UsersController struct {
+	DB *sql.DB
+}
+func NewUsersController(db *sql.DB) *UsersController {
+	return &UsersController{DB: db}
+}
+
+func (c *UsersController) CreateUser(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		responses.Error(w, http.StatusMethodNotAllowed, errors.New("Method not allowed"))
 		return
@@ -40,14 +46,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db, err := database.Connect()
-	if err != nil {
-		responses.Error(w, http.StatusInternalServerError, errors.New("Error connecting to database"))
-		return
-	}
-	defer db.Close()
-
-	repository := repositories.NewUsersRepository(db)
+	repository := repositories.NewUsersRepository(c.DB)
 	insertedID, err := repository.Create(user)
 	if err != nil {
 		var driverErr *mysql.MySQLError
@@ -80,16 +79,10 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 	responses.JSON(w, http.StatusCreated, response)
 }
 
-func GetUsers(w http.ResponseWriter, r *http.Request) {
+func (c *UsersController) GetUsers(w http.ResponseWriter, r *http.Request) {
 	nameOrNick := strings.ToLower(r.URL.Query().Get("user"))
-	db, err := database.Connect()
-	if err != nil {
-		responses.Error(w, http.StatusInternalServerError, errors.New("Error connecting to database"))
-		return
-	}
-	defer db.Close()
 
-	repository := repositories.NewUsersRepository(db)
+	repository := repositories.NewUsersRepository(c.DB)
 	users, err := repository.Search(nameOrNick)
 	if err != nil {
 		responses.Error(w, http.StatusInternalServerError, err)
@@ -99,7 +92,7 @@ func GetUsers(w http.ResponseWriter, r *http.Request) {
 	responses.JSON(w, http.StatusOK, users)
 }
 
-func GetUser(w http.ResponseWriter, r *http.Request) {
+func (c *UsersController) GetUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	userID, err := strconv.ParseUint(vars["id"], 10, 64)
 	if err != nil {
@@ -107,14 +100,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db, err := database.Connect()
-	if err != nil {
-		responses.Error(w, http.StatusInternalServerError, errors.New("Error connecting to database"))
-		return
-	}
-	defer db.Close()
-
-	repository := repositories.NewUsersRepository(db)
+	repository := repositories.NewUsersRepository(c.DB)
 	user, err := repository.FindByID(userID)
 
 	if err != nil {
@@ -129,13 +115,13 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 	responses.JSON(w, http.StatusOK, user)
 }
 
-func UpdateUser(w http.ResponseWriter, r *http.Request) {
+func (c *UsersController) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Update User"))
 }
 
-func DeleteUser(w http.ResponseWriter, r *http.Request) {
+func (c *UsersController) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Delete User"))
