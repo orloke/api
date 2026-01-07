@@ -118,3 +118,28 @@ func (u Users) Delete(ID uint64) error {
 
 	return nil
 }
+
+func (u Users) GetPassword(userID uint64) (string, error) {
+	row := u.db.QueryRow("select password from users where id = ?", userID)
+
+	var password string
+	if err := row.Scan(&password); err != nil {
+		return "", err
+	}
+
+	return password, nil
+}
+
+func (u Users) UpdatePassword(userID uint64, password string) error {
+	statement, err := u.db.Prepare("update users set password = ? where id = ?")
+	if err != nil {
+		return err
+	}
+	defer statement.Close()
+
+	if _, err = statement.Exec(password, userID); err != nil {
+		return err
+	}
+
+	return nil
+}

@@ -37,5 +37,11 @@ func GetUsersRoutes(c *controllers.UsersController) []Route {
 			Func:   c.DeleteUser,
 			Auth:   false,
 		},
+		{
+			Uri:    "/users/{id}/update-password",
+			Method: http.MethodPost,
+			Func:   c.UpdatePassword,
+			Auth:   false,
+		},
 	}
 }

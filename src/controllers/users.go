@@ -4,6 +4,7 @@ import (
 	"api/src/models"
 	"api/src/repositories"
 	"api/src/responses"
+	"api/src/security"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -175,6 +176,57 @@ func (c *UsersController) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	repository := repositories.NewUsersRepository(c.DB)
 	if err = repository.Delete(userID); err != nil {
 		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	responses.JSON(w, http.StatusNoContent, nil)
+}
+
+func (c *UsersController) UpdatePassword(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	userID, err := strconv.ParseUint(vars["id"], 10, 64)
+	if err != nil {
+		responses.Error(w, http.StatusBadRequest, errors.New("Invalid user ID"))
+		return
+	}
+
+	requestBody, err := io.ReadAll(r.Body)
+	if err != nil {
+		responses.Error(w, http.StatusUnprocessableEntity, errors.New("Failed to read body request"))
+		return
+	}
+
+	var password models.Password
+	if err = json.Unmarshal(requestBody, &password); err != nil {
+		responses.Error(w, http.StatusBadRequest, errors.New("Error converting password to struct"))
+		return
+	}
+
+	if err = password.Validate(); err != nil {
+		responses.Error(w, http.StatusBadRequest, err)
+		return
+	}
+
+	repository := repositories.NewUsersRepository(c.DB)
+	passwordInDB, err := repository.GetPassword(userID)
+	if err != nil {
+		responses.Error(w, http.StatusInternalServerError, errors.New("Error getting password from database"))
+		return
+	}
+
+	if err = security.VerifyPassword(passwordInDB, password.Current); err != nil {
+		responses.Error(w, http.StatusUnauthorized, errors.New("Invalid current password"))
+		return
+	}
+
+	hashedPassword, err := security.Hash(password.New)
+	if err != nil {
+		responses.Error(w, http.StatusInternalServerError, errors.New("Error hashing password"))
+		return
+	}
+
+	if err = repository.UpdatePassword(userID, string(hashedPassword)); err != nil {
+		responses.Error(w, http.StatusInternalServerError, errors.New("Error updating password"))
 		return
 	}
 
