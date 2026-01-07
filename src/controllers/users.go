@@ -165,7 +165,18 @@ func (c *UsersController) UpdateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *UsersController) DeleteUser(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Delete User"))
+	vars := mux.Vars(r)
+	userID, err := strconv.ParseUint(vars["id"], 10, 64)
+	if err != nil {
+		responses.Error(w, http.StatusBadRequest, errors.New("Invalid user ID"))
+		return
+	}
+
+	repository := repositories.NewUsersRepository(c.DB)
+	if err = repository.Delete(userID); err != nil {
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	responses.JSON(w, http.StatusNoContent, nil)
 }
