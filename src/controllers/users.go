@@ -12,13 +12,13 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 )
 
 type UsersController struct {
 	DB *sql.DB
 }
+
 func NewUsersController(db *sql.DB) *UsersController {
 	return &UsersController{DB: db}
 }
@@ -41,7 +41,7 @@ func (c *UsersController) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err = user.Prepare(); err != nil {
+	if err = user.Prepare("register"); err != nil {
 		responses.Error(w, http.StatusBadRequest, err)
 		return
 	}
@@ -49,16 +49,8 @@ func (c *UsersController) CreateUser(w http.ResponseWriter, r *http.Request) {
 	repository := repositories.NewUsersRepository(c.DB)
 	insertedID, err := repository.Create(user)
 	if err != nil {
-		var driverErr *mysql.MySQLError
-		if errors.As(err, &driverErr) && driverErr.Number == 1062 {
-			if strings.Contains(driverErr.Message, "email") {
-				responses.Error(w, http.StatusConflict, errors.New("email already registered"))
-				return
-			}
-			if strings.Contains(driverErr.Message, "nick") {
-				responses.Error(w, http.StatusConflict, errors.New("nick already registered"))
-				return
-			}
+		if handleDuplicateError(w, err) {
+			return
 		}
 
 		responses.Error(w, http.StatusInternalServerError, errors.New("Error creating user"))
@@ -116,9 +108,60 @@ func (c *UsersController) GetUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *UsersController) UpdateUser(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Update User"))
+	vars := mux.Vars(r)
+	userID, err := strconv.ParseUint(vars["id"], 10, 64)
+	if err != nil {
+		responses.Error(w, http.StatusBadRequest, errors.New("Invalid user ID"))
+		return
+	}
+
+	requestBody, err := io.ReadAll(r.Body)
+	if err != nil {
+		responses.Error(w, http.StatusUnprocessableEntity, errors.New("Failed to read body request"))
+		return
+	}
+
+	var user models.User
+	if err = json.Unmarshal(requestBody, &user); err != nil {
+		responses.Error(w, http.StatusBadRequest, errors.New("Error converting user to struct"))
+		return
+	}
+
+	repository := repositories.NewUsersRepository(c.DB)
+	userInDB, err := repository.FindByID(userID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			responses.Error(w, http.StatusNotFound, errors.New("User not found"))
+			return
+		}
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	if user.Name == "" {
+		user.Name = userInDB.Name
+	}
+	if user.Nick == "" {
+		user.Nick = userInDB.Nick
+	}
+	if user.Email == "" {
+		user.Email = userInDB.Email
+	}
+
+	if err = user.Prepare("edit"); err != nil {
+		responses.Error(w, http.StatusBadRequest, err)
+		return
+	}
+
+	if err = repository.Update(userID, user); err != nil {
+		if handleDuplicateError(w, err) {
+			return
+		}
+		responses.Error(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	responses.JSON(w, http.StatusNoContent, nil)
 }
 
 func (c *UsersController) DeleteUser(w http.ResponseWriter, r *http.Request) {

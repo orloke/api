@@ -19,10 +19,10 @@ type User struct {
 }
 
 type UserResponse struct {
-	ID    int    `json:"id"`
-	Name  string `json:"name"`
-	Nick  string `json:"nick"`
-	Email string `json:"email"`
+	ID        int       `json:"id"`
+	Name      string    `json:"name"`
+	Nick      string    `json:"nick"`
+	Email     string    `json:"email"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
@@ -35,12 +35,12 @@ type NewUserResponse struct {
 }
 
 type CreateUserResponse struct {
-	Message string       `json:"message"`
+	Message string          `json:"message"`
 	User    NewUserResponse `json:"user"`
 }
 
-func (user *User) Prepare() error {
-	if err := user.validate(); err != nil {
+func (user *User) Prepare(step string) error {
+	if err := user.validate(step); err != nil {
 		return err
 	}
 
@@ -48,7 +48,7 @@ func (user *User) Prepare() error {
 	return nil
 }
 
-func (user *User) validate() error {
+func (user *User) validate(step string) error {
 	if user.Name == "" {
 		return errors.New("name is required and cannot be empty")
 	}
@@ -61,7 +61,7 @@ func (user *User) validate() error {
 		return errors.New("the email entered is invalid")
 	}
 
-	if user.Password == "" {
+	if step == "register" && user.Password == "" {
 		return errors.New("password is required and cannot be empty")
 	}
 
