@@ -17,8 +17,13 @@ type Route struct {
 
 func ConfigureRoutes(router *mux.Router, db *sql.DB) *mux.Router {
 	usersController := controllers.NewUsersController(db)
+	loginController := controllers.NewLoginController(db)
 
 	for _, route := range GetUsersRoutes(usersController) {
+		router.HandleFunc(route.Uri, route.Func).Methods(route.Method)
+	}
+
+	for _, route := range GetLoginRoutes(loginController) {
 		router.HandleFunc(route.Uri, route.Func).Methods(route.Method)
 	}
 
