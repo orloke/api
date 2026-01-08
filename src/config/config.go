@@ -12,6 +12,7 @@ import (
 var (
 	StringConnectionDB = ""
 	Port               = 0
+	JWT_SECRET         []byte
 )
 
 func Load() {
@@ -33,4 +34,6 @@ func Load() {
 		os.Getenv("DB_PORT"),
 		os.Getenv("DB_NAME"),
 	)
+
+	JWT_SECRET = []byte(os.Getenv("JWT_SECRET"))
 }

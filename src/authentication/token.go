@@ -1,7 +1,7 @@
 package authentication
 
 import (
-	"os"
+	"api/src/config"
 	"time"
 
 	jwt "github.com/golang-jwt/jwt/v5"
@@ -16,5 +16,5 @@ func CreateToken(userID uint64, email string, nick string) (string, error) {
 	permissions["nick"] = nick
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, permissions)
-	return token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	return token.SignedString(config.JWT_SECRET)
 }
