@@ -11,37 +11,37 @@ func GetUsersRoutes(c *controllers.UsersController) []Route {
 			Uri:    "/users",
 			Method: http.MethodPost,
 			Func:   c.CreateUser,
-			Auth:   false,
+			Auth:   true,
 		},
 		{
 			Uri:    "/users",
 			Method: http.MethodGet,
 			Func:   c.GetUsers,
-			Auth:   false,
+			Auth:   true,
 		},
 		{
 			Uri:    "/users/{id}",
 			Method: http.MethodGet,
 			Func:   c.GetUser,
-			Auth:   false,
+			Auth:   true,
 		},
 		{
 			Uri:    "/users/{id}",
 			Method: http.MethodPut,
 			Func:   c.UpdateUser,
-			Auth:   false,
+			Auth:   true,
 		},
 		{
 			Uri:    "/users/{id}",
 			Method: http.MethodDelete,
 			Func:   c.DeleteUser,
-			Auth:   false,
+			Auth:   true,
 		},
 		{
 			Uri:    "/users/{id}/update-password",
 			Method: http.MethodPost,
 			Func:   c.UpdatePassword,
-			Auth:   false,
+			Auth:   true,
 		},
 	}
 }

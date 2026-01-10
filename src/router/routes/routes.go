@@ -2,6 +2,7 @@ package routes
 
 import (
 	"api/src/controllers"
+	"api/src/middlewares"
 	"database/sql"
 	"net/http"
 
@@ -19,12 +20,15 @@ func ConfigureRoutes(router *mux.Router, db *sql.DB) *mux.Router {
 	usersController := controllers.NewUsersController(db)
 	loginController := controllers.NewLoginController(db)
 
-	for _, route := range GetUsersRoutes(usersController) {
-		router.HandleFunc(route.Uri, route.Func).Methods(route.Method)
-	}
+	routes := GetUsersRoutes(usersController)
+	routes = append(routes, GetLoginRoutes(loginController)...)
 
-	for _, route := range GetLoginRoutes(loginController) {
-		router.HandleFunc(route.Uri, route.Func).Methods(route.Method)
+	for _, route := range routes {
+		if route.Auth {
+			router.HandleFunc(route.Uri, middlewares.Authenticate(route.Func)).Methods(route.Method)
+		} else {
+			router.HandleFunc(route.Uri, route.Func).Methods(route.Method)
+		}
 	}
 
 	return router
