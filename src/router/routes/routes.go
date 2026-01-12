@@ -19,9 +19,11 @@ type Route struct {
 func ConfigureRoutes(router *mux.Router, db *sql.DB) *mux.Router {
 	usersController := controllers.NewUsersController(db)
 	loginController := controllers.NewLoginController(db)
+	followersController := controllers.NewFollowersController(db)
 
 	routes := GetUsersRoutes(usersController)
 	routes = append(routes, GetLoginRoutes(loginController)...)
+	routes = append(routes, GetFollowersRoutes(followersController)...)
 
 	for _, route := range routes {
 		if route.Auth {
